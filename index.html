@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OS</title>
+  <meta name="description" content="OS – ein ruhiges Life-Operating-System.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23F6F3EE'/><text x='16' y='22' font-family='Georgia,serif' font-size='16' text-anchor='middle' fill='%2322252A'>OS</text></svg>">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/views.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <span class="brand-mark">OS</span>
+        <span class="brand-sub">Life Operating System</span>
+      </div>
+
+      <nav class="nav" id="nav">
+        <a class="nav-item" href="#/heute"    data-route="heute"><span class="nav-num">01</span><span class="nav-label">Heute</span></a>
+        <a class="nav-item" href="#/woche"    data-route="woche"><span class="nav-num">02</span><span class="nav-label">Woche</span></a>
+        <a class="nav-item" href="#/saison"   data-route="saison"><span class="nav-num">03</span><span class="nav-label">Saison</span></a>
+        <a class="nav-item" href="#/projekte" data-route="projekte"><span class="nav-num">04</span><span class="nav-label">Projekte &amp; Ziele</span></a>
+        <a class="nav-item" href="#/system"   data-route="system"><span class="nav-num">05</span><span class="nav-label">Review &amp; System</span></a>
+      </nav>
+
+      <div class="sidebar-foot">
+        <button class="side-btn" data-act="ui.inbox">
+          <span>Inbox</span><span class="pill" id="inbox-count">0</span>
+        </button>
+        <button class="side-btn" data-act="ui.search"><span>Suche</span><span class="kbd">/</span></button>
+        <div class="side-note" id="season-hint"></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <span class="topbar-date" id="topbar-date"></span>
+        </div>
+        <div class="topbar-right">
+          <button class="icon-btn" data-act="ui.search" title="Suchen (/)" aria-label="Suchen">
+            <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><circle cx="9" cy="9" r="5.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M13.2 13.2 17 17" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </button>
+          <button class="icon-btn" data-act="ui.inbox" title="Inbox (i)" aria-label="Inbox">
+            <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M3 12h4l1 2h4l1-2h4M3 12l2-7h10l2 7v4H3v-4Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="btn btn-primary btn-new" data-act="ui.new">Neu<span class="kbd kbd-on-dark">n</span></button>
+        </div>
+      </header>
+
+      <div class="view" id="view" tabindex="-1"></div>
+    </main>
+  </div>
+
+  <div class="drawer" id="drawer" hidden aria-hidden="true"></div>
+  <div class="overlay" id="overlay" hidden></div>
+  <div id="modal-root"></div>
+  <div class="toast-wrap" id="toast-wrap"></div>
+
+  <script src="assets/js/util.js"></script>
+  <script src="assets/js/store.js"></script>
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/forms.js"></script>
+  <script src="assets/js/views/today.js"></script>
+  <script src="assets/js/views/week.js"></script>
+  <script src="assets/js/views/season.js"></script>
+  <script src="assets/js/views/projects.js"></script>
+  <script src="assets/js/views/system.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

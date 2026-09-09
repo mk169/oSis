@@ -1,0 +1,159 @@
+/* ===========================================================
+   OS — Base: Tokens, Reset, Typografie
+   Ruhig, editorial, warmes Off-White.
+   =========================================================== */
+
+:root {
+  /* Flächen */
+  --paper:     #F6F3EE;   /* warmes Off-White, Hintergrund */
+  --surface:   #FCFAF7;   /* Karten */
+  --surface-2: #F0ECE4;   /* eingelassene Flächen */
+  --surface-3: #EAE5DB;
+
+  /* Schrift */
+  --ink:   #22252A;       /* Anthrazit */
+  --ink-2: #4C525A;
+  --ink-3: #8B9199;       /* gedämpft */
+  --ink-4: #A9AEB4;
+
+  /* Linien */
+  --line:   #E5DFD5;
+  --line-2: #D8D0C2;
+
+  /* Farben */
+  --green:      #57705C;  /* gedecktes Grün */
+  --green-2:    #6E866F;
+  --green-soft: #E8EEE7;
+  --accent:      #B4643C; /* Akzentton */
+  --accent-soft: #F4E7DE;
+  --warn:        #A88B4C; /* dezenter Hinweis, niemals Alarm */
+  --warn-soft:   #F3EBDA;
+
+  /* Typo */
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Maße */
+  --radius: 4px;
+  --radius-lg: 6px;
+  --shadow: 0 1px 2px rgba(34, 37, 42, .04), 0 8px 24px rgba(34, 37, 42, .06);
+  --shadow-lift: 0 2px 6px rgba(34, 37, 42, .06), 0 18px 48px rgba(34, 37, 42, .12);
+  --sidebar-w: 232px;
+  --content-w: 1120px;
+  --speed: 160ms;
+}
+
+[data-theme="dark"] {
+  --paper:     #17181A;
+  --surface:   #1E2023;
+  --surface-2: #24262A;
+  --surface-3: #2B2E32;
+  --ink:   #E9E4DA;
+  --ink-2: #BAB4AA;
+  --ink-3: #8C8A84;
+  --ink-4: #6E6C68;
+  --line:   #2C2F33;
+  --line-2: #3A3E43;
+  --green:      #93AC93;
+  --green-2:    #7F9880;
+  --green-soft: #222923;
+  --accent:      #D08B62;
+  --accent-soft: #2E241E;
+  --warn:        #C4A868;
+  --warn-soft:   #2B2619;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+  --shadow-lift: 0 2px 6px rgba(0,0,0,.35), 0 18px 48px rgba(0,0,0,.45);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--serif);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.18;
+}
+
+h1 { font-size: 40px; }
+h2 { font-size: 25px; }
+h3 { font-size: 19px; }
+h4 { font-size: 16px; }
+
+p { margin: 0 0 1em; }
+p:last-child { margin-bottom: 0; }
+
+a { color: inherit; text-decoration: none; }
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+button { cursor: pointer; background: none; border: none; padding: 0; }
+
+::selection { background: var(--accent-soft); color: var(--ink); }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Typo-Utilities ------------------------------------------------ */
+
+.overline {
+  font-size: 11px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+.serif { font-family: var(--serif); }
+.muted { color: var(--ink-3); }
+.small { font-size: 13px; }
+.tiny  { font-size: 12px; }
+.center { text-align: center; }
+.nowrap { white-space: nowrap; }
+.hidden { display: none !important; }
+
+.lede {
+  font-family: var(--serif);
+  font-size: 17px;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
+.hr {
+  height: 1px;
+  background: var(--line);
+  border: 0;
+  margin: 32px 0;
+}
+
+/* Scrollbars – dezent */
+* { scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 10px; border: 3px solid var(--paper); }
+*::-webkit-scrollbar-track { background: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
