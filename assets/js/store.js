@@ -68,6 +68,7 @@ OS.store = (function () {
 
   let state = blank();
   let ready = false;
+  let fresh = false;
   const listeners = [];
 
   function load() {
@@ -118,9 +119,13 @@ OS.store = (function () {
     const loaded = load();
     state = loaded || blank();
     ready = true;
+    fresh = !loaded;
     if (!loaded) save(true);
     return state;
   }
+
+  /** true, wenn dieser Browser noch keine Daten hatte */
+  function isFresh() { return fresh; }
 
   function subscribe(fn) { listeners.push(fn); return () => {
     const i = listeners.indexOf(fn); if (i >= 0) listeners.splice(i, 1);
@@ -635,8 +640,12 @@ OS.store = (function () {
     }, null, 2);
   }
 
+  function exportFileName() {
+    return 'os-export-' + U.today() + '.json';
+  }
+
   function exportFile() {
-    U.download('os-export-' + U.today() + '.json', exportData());
+    return U.saveFile(exportFileName(), exportData());
   }
 
   /** mode: 'ersetzen' | 'zusammenfuehren' */
@@ -681,7 +690,7 @@ OS.store = (function () {
     VERSION, PROJECT_STATUS, PROJECT_STATUS_LABEL, GOAL_STATUS_LABEL,
     HORIZON_LABEL, IDEA_STATUS_LABEL, INBOX_KIND_LABEL, ACCENTS, AREA_COLORS,
 
-    init, subscribe, emit, update, silent, save, isEmpty,
+    init, subscribe, emit, update, silent, save, isEmpty, isFresh,
     get state() { return state; },
 
     getDay, ensureDay, getWeek, ensureWeek,
@@ -698,6 +707,6 @@ OS.store = (function () {
     dayBlocks, dayPlannedHours, weekCapacity,
     archiveCounts, stats,
 
-    exportData, exportFile, importData, reset
+    exportData, exportFile, exportFileName, importData, reset
   };
 })();

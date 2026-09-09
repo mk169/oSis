@@ -19,6 +19,25 @@ Alle Daten liegen im `localStorage` des Browsers. Es gibt kein Konto und keine
 Übertragung nach außen. Export und Import als JSON finden sich unter
 **Review & System → Daten**.
 
+## Einzeldatei-Fassung
+
+```
+node build.js
+```
+
+Fasst Markup, CSS und JavaScript zu `dist/os.html` zusammen. Diese eine Datei
+enthält die vollständige App und lässt sich überall hinlegen oder einbetten.
+
+Steht eine Speicherfunktion der Umgebung zur Verfügung, nutzt der Export sie.
+Ist keine vorhanden, zeigt OS den Export als Text zum Kopieren. Der Import
+nimmt wahlweise eine Datei oder eingefügten Text.
+
+## Als Website veröffentlichen
+
+Über GitHub Pages: Repository → Settings → Pages → Source „Deploy from a
+branch“ → Branch `main` und Ordner `/ (root)`. Danach liegt die App unter
+`https://mk169.github.io/oSis/`.
+
 ## Aufbau
 
 | Bereich | Zweck |
@@ -78,6 +97,7 @@ assets/js/ui.js              Modal, Formular, Toast, Drawer
 assets/js/forms.js           Dialoge für Aufgabe, Projekt, Ziel, Saison; Frameworks
 assets/js/views/*.js         Die fünf Ansichten
 assets/js/app.js             Router, Ereignisse, Inbox, Suche
+build.js                     Baut dist/os.html als Einzeldatei
 ```
 
 ## Datenformat

@@ -599,6 +599,11 @@ OS.app = (function () {
 
   function init() {
     S.init();
+
+    // Beim allerersten Start der Systemeinstellung folgen. Danach entscheidet der Schalter.
+    if (S.isFresh() && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      S.silent(() => { S.state.settings.theme = 'dark'; });
+    }
     applySettings();
 
     registerActions(sharedActions);

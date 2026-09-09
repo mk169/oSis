@@ -598,14 +598,49 @@ OS.views.system = (function () {
     return head + tabs(tab) + body;
   }
 
-  /* --- Import ---------------------------------------------------------------------- */
+  /* --- Export / Import ---------------------------------------------------------------- */
+
+  /** Wenn kein Speichern möglich ist: Text zum Kopieren zeigen. */
+  function exportTextDialog(json, filename) {
+    OS.ui.modal({
+      title: 'Export',
+      subtitle: 'Hier kann keine Datei gespeichert werden. Kopiere den Text und sichere ihn als ' + filename + '.',
+      size: 'lg',
+      body: '<div class="stack" style="gap:12px">' +
+        '<textarea class="textarea" style="height:320px;font-family:var(--mono);font-size:11.5px" data-json readonly>' +
+          U.esc(json) + '</textarea>' +
+        '<div class="note note-quiet">Dieser Text ist deine vollständige Sicherung. ' +
+        'Unter „Import“ kannst du ihn jederzeit wieder einfügen.</div>' +
+        '</div>',
+      footer: '<button class="btn" data-modal-close type="button">Schließen</button>' +
+        '<button class="btn btn-primary" data-copy type="button">Text kopieren</button>',
+      onMount: function (root) {
+        const area = root.querySelector('[data-json]');
+        root.querySelector('[data-copy]').addEventListener('click', function () {
+          area.focus();
+          area.select();
+          const done = function () { OS.ui.toast('In die Zwischenablage kopiert.'); };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(json).then(done, function () {
+              OS.ui.toast('Bitte mit Strg+C oder Cmd+C kopieren.');
+            });
+          } else {
+            OS.ui.toast('Bitte mit Strg+C oder Cmd+C kopieren.');
+          }
+        });
+      }
+    });
+  }
 
   function importDialog() {
     OS.ui.modal({
       title: 'Daten importieren',
-      subtitle: 'Wähle eine zuvor exportierte JSON-Datei.',
+      subtitle: 'Wähle eine exportierte JSON-Datei oder füge den Text ein.',
       body: '<div class="stack" style="gap:16px">' +
-        '<input type="file" accept="application/json,.json" data-file class="input">' +
+        '<label class="field"><span class="field-label">Datei</span>' +
+          '<input type="file" accept="application/json,.json" data-file class="input"></label>' +
+        '<label class="field"><span class="field-label">Oder Text einfügen</span>' +
+          '<textarea class="textarea" rows="5" data-paste placeholder="Den Inhalt einer Exportdatei hier einfügen"></textarea></label>' +
         '<label class="field"><span class="field-label">Vorgehen</span>' +
           '<select class="select" data-mode>' +
             '<option value="ersetzen">Vorhandene Daten ersetzen</option>' +
@@ -617,22 +652,28 @@ OS.views.system = (function () {
       footer: '<button class="btn" data-modal-close type="button">Abbrechen</button>' +
         '<button class="btn btn-primary" data-go type="button">Importieren</button>',
       onMount: function (root, api) {
+        function apply(text, mode) {
+          try {
+            S.importData(text, mode);
+            api.close();
+            OS.ui.toast('Import abgeschlossen.');
+            OS.app.applySettings();
+          } catch (err) {
+            OS.ui.toast(err.message || 'Import fehlgeschlagen.');
+          }
+        }
+
         root.querySelector('[data-go]').addEventListener('click', () => {
-          const input = root.querySelector('[data-file]');
           const mode = root.querySelector('[data-mode]').value;
+          const pasted = root.querySelector('[data-paste]').value.trim();
+          if (pasted) { apply(pasted, mode); return; }
+
+          const input = root.querySelector('[data-file]');
           const file = input.files && input.files[0];
-          if (!file) { OS.ui.toast('Bitte eine Datei wählen.'); return; }
+          if (!file) { OS.ui.toast('Bitte eine Datei wählen oder Text einfügen.'); return; }
           const reader = new FileReader();
-          reader.onload = function () {
-            try {
-              S.importData(String(reader.result), mode);
-              api.close();
-              OS.ui.toast('Import abgeschlossen.');
-              OS.app.applySettings();
-            } catch (err) {
-              OS.ui.toast(err.message || 'Import fehlgeschlagen.');
-            }
-          };
+          reader.onload = function () { apply(String(reader.result), mode); };
+          reader.onerror = function () { OS.ui.toast('Die Datei ließ sich nicht lesen.'); };
           reader.readAsText(file);
         });
       }
@@ -733,8 +774,13 @@ OS.views.system = (function () {
     },
 
     'system.export': function () {
-      S.exportFile();
-      OS.ui.toast('Export gespeichert.');
+      const json = S.exportData();
+      const name = S.exportFileName();
+      S.exportFile().then(function (result) {
+        if (result === 'saved' || result === 'local') OS.ui.toast('Export gespeichert.');
+        else if (result === 'declined') OS.ui.toast('Export abgebrochen.');
+        else exportTextDialog(json, name);
+      });
     },
     'system.import': function () { importDialog(); },
     'system.reset': async function () {

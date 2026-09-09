@@ -242,6 +242,27 @@ OS.util = (function () {
     return (a.order ?? 0) - (b.order ?? 0);
   }
 
+  /**
+   * Datei sichern – lokal über einen Download, in einer eingebetteten
+   * Umgebung über die Speicherfunktion des Betrachters.
+   * Ergebnis: 'local' | 'saved' | 'declined' | 'unavailable'
+   */
+  function saveFile(filename, text) {
+    const hosted = !!(window.claude && typeof window.claude.use === 'function');
+    if (!hosted) {
+      download(filename, text);
+      return Promise.resolve('local');
+    }
+    return window.claude.use('downloads').then(function (dl) {
+      if (!dl || typeof dl.save !== 'function') return 'unavailable';
+      return dl.save({ filename: filename, data: text })
+        .then(function () { return 'saved'; })
+        .catch(function (err) {
+          return err && err.code === 'declined' ? 'declined' : 'unavailable';
+        });
+    }).catch(function () { return 'unavailable'; });
+  }
+
   function download(filename, text, mime) {
     const blob = new Blob([text], { type: mime || 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -289,7 +310,7 @@ OS.util = (function () {
     startOfWeek, weekKey, weekStart, weekDays, weekNumber, shiftWeek, dow,
     fmtWeekday, fmtLong, fmtShort, fmtMedium, fmtRange, fmtRelative, monthName,
     toMinutes, fromMinutes, blockHours, fmtHours,
-    clamp, debounce, getPath, setPath, move, byOrder, download, autosize, autosizeAll,
+    clamp, debounce, getPath, setPath, move, byOrder, download, saveFile, autosize, autosizeAll,
     icons
   };
 })();
