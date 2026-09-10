@@ -459,11 +459,125 @@ OS.views.system = (function () {
 
   /* --- Tab: Daten ------------------------------------------------------------- */
 
+  /* --- Kopplung ---------------------------------------------------------------- */
+
+  const SYNC_LABEL = {
+    aus: 'Nicht eingerichtet',
+    verbindet: 'Verbindet …',
+    anmeldung: 'Anmeldung nötig',
+    abgleich: 'Gleicht ab …',
+    gekoppelt: 'Gekoppelt',
+    fehler: 'Unterbrochen'
+  };
+
+  function syncSection() {
+    const sync = OS.sync;
+    const status = sync.status;
+    const backup = sync.backupTime();
+
+    let body = '';
+
+    // In eingebetteten Umgebungen sind Verbindungen nach außen gesperrt.
+    if (window.claude && typeof window.claude.use === 'function') {
+      return '<section class="section">' +
+        '<div class="section-head"><h2>Geräte</h2></div>' +
+        '<div class="note note-quiet">Hier ist keine Kopplung möglich, weil diese Umgebung keine Verbindungen ' +
+        'zu fremden Servern zulässt. Nutze dafür die installierte Fassung. ' +
+        'Export und Import funktionieren auch hier.</div>' +
+        '</section>';
+    }
+
+    if (status === 'aus') {
+      body = '<p class="small muted" style="margin-bottom:14px">Ohne Kopplung bleibt jedes Gerät für sich. ' +
+        'Mit Kopplung sehen iPhone und Mac denselben Stand.</p>' +
+        '<button class="btn btn-sm" data-act="system.syncSetup">Kopplung einrichten</button>';
+    } else if (status === 'anmeldung') {
+      body = '<p class="small muted" style="margin-bottom:14px">Melde dich mit deiner E-Mail-Adresse an. ' +
+        'Du bekommst einen Link zugeschickt, ein Passwort brauchst du nicht. ' +
+        'Auf dem zweiten Gerät nimmst du dieselbe Adresse.</p>' +
+        '<div class="row" style="gap:8px;flex-wrap:nowrap;max-width:420px">' +
+          '<input class="input" type="email" data-sync-mail placeholder="deine@adresse.de" style="flex:1">' +
+          '<button class="btn btn-sm" data-act="system.syncLogin">Link senden</button>' +
+        '</div>' +
+        '<div style="margin-top:12px"><button class="link-btn" data-act="system.syncSetup">Zugangsdaten ändern</button></div>';
+    } else if (status === 'gekoppelt' || status === 'abgleich') {
+      body = '<div class="stack" style="gap:10px">' +
+        '<div class="small">Angemeldet als ' + U.esc(sync.email || '—') + '</div>' +
+        (sync.lastSync ? '<div class="tiny muted">Zuletzt abgeglichen um ' +
+          U.esc(new Date(sync.lastSync).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })) + ' Uhr</div>' : '') +
+        '<div class="row" style="margin-top:6px">' +
+          '<button class="btn btn-sm" data-act="system.syncNow">Jetzt abgleichen</button>' +
+          '<button class="btn btn-sm btn-quiet" data-act="system.syncLogout">Abmelden</button>' +
+        '</div>' +
+        '</div>';
+    } else if (status === 'fehler') {
+      body = '<div class="note" style="margin-bottom:14px">' + U.esc(sync.detail || 'Der Abgleich ruht gerade.') + '</div>' +
+        '<div class="row">' +
+          '<button class="btn btn-sm" data-act="system.syncNow">Erneut versuchen</button>' +
+          '<button class="link-btn" data-act="system.syncSetup">Zugangsdaten ändern</button>' +
+        '</div>';
+    } else {
+      body = '<p class="small muted">Einen Moment.</p>';
+    }
+
+    return '<section class="section">' +
+      '<div class="section-head"><h2>Geräte</h2>' +
+        '<span class="chip' + (status === 'gekoppelt' ? ' chip-green' : status === 'fehler' ? ' chip-warn' : '') + '">' +
+        U.esc(SYNC_LABEL[status] || status) + '</span></div>' +
+      '<div class="card">' + body +
+        (backup ? '<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">' +
+          '<div class="tiny muted" style="margin-bottom:8px">Sicherung vom ' +
+            U.esc(U.fmtMedium(String(backup).slice(0, 10))) + ', angelegt vor dem letzten Übernehmen.</div>' +
+          '<button class="btn btn-sm btn-quiet" data-act="system.syncRestore">Vorherigen Stand zurückholen</button>' +
+        '</div>' : '') +
+      '</div>' +
+      '</section>';
+  }
+
+  function syncSetupDialog() {
+    const cfg = OS.sync.config() || { url: '', key: '' };
+    OS.ui.form({
+      title: 'Kopplung einrichten',
+      subtitle: 'Einmal pro Gerät. Die beiden Werte findest du in deinem Supabase-Projekt unter Settings, API.',
+      submitLabel: 'Verbinden',
+      size: 'lg',
+      extraFooter: cfg.url ? '<button class="btn btn-quiet btn-sm" data-clear type="button">Verbindung lösen</button>' : '',
+      fields: [
+        {
+          type: 'note', tone: 'note-quiet',
+          text: 'Der Projektschlüssel ist der öffentliche „anon public“. Er darf im Gerät liegen; ' +
+            'geschützt werden die Daten durch die Zugriffsregeln der Datenbank.'
+        },
+        { name: 'url', label: 'Projekt-URL', value: cfg.url, placeholder: 'https://xxxxx.supabase.co', autofocus: true },
+        { name: 'key', type: 'textarea', rows: 3, label: 'anon public key', value: cfg.key, placeholder: 'eyJhbGci…' }
+      ],
+      onMount: function (root, api) {
+        const clear = root.querySelector('[data-clear]');
+        if (clear) clear.addEventListener('click', function () {
+          OS.sync.clearConfig();
+          api.close();
+          OS.app.render();
+          OS.ui.toast('Verbindung gelöst. Deine Daten bleiben auf diesem Gerät.');
+        });
+      },
+      onSubmit: function (v) {
+        if (!OS.sync.setConfig(v.url, v.key)) {
+          OS.ui.toast('Bitte beide Werte eintragen.');
+          return false;
+        }
+        OS.sync.start();
+        OS.ui.toast('Verbindung gespeichert.');
+      }
+    });
+  }
+
   function dataTab() {
     const st = S.stats();
     const settings = S.state.settings;
 
-    return '<section class="section">' +
+    return syncSection() +
+
+      '<section class="section">' +
         '<div class="section-head"><h2>Daten</h2></div>' +
         '<p class="small muted" style="margin-bottom:20px">Alles bleibt in diesem Browser. Kein Konto, kein Server. ' +
         'Ein Export ist deine Sicherung – und dein Umzugskarton.</p>' +
@@ -598,14 +712,49 @@ OS.views.system = (function () {
     return head + tabs(tab) + body;
   }
 
-  /* --- Import ---------------------------------------------------------------------- */
+  /* --- Export / Import ---------------------------------------------------------------- */
+
+  /** Wenn kein Speichern möglich ist: Text zum Kopieren zeigen. */
+  function exportTextDialog(json, filename) {
+    OS.ui.modal({
+      title: 'Export',
+      subtitle: 'Hier kann keine Datei gespeichert werden. Kopiere den Text und sichere ihn als ' + filename + '.',
+      size: 'lg',
+      body: '<div class="stack" style="gap:12px">' +
+        '<textarea class="textarea" style="height:320px;font-family:var(--mono);font-size:11.5px" data-json readonly>' +
+          U.esc(json) + '</textarea>' +
+        '<div class="note note-quiet">Dieser Text ist deine vollständige Sicherung. ' +
+        'Unter „Import“ kannst du ihn jederzeit wieder einfügen.</div>' +
+        '</div>',
+      footer: '<button class="btn" data-modal-close type="button">Schließen</button>' +
+        '<button class="btn btn-primary" data-copy type="button">Text kopieren</button>',
+      onMount: function (root) {
+        const area = root.querySelector('[data-json]');
+        root.querySelector('[data-copy]').addEventListener('click', function () {
+          area.focus();
+          area.select();
+          const done = function () { OS.ui.toast('In die Zwischenablage kopiert.'); };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(json).then(done, function () {
+              OS.ui.toast('Bitte mit Strg+C oder Cmd+C kopieren.');
+            });
+          } else {
+            OS.ui.toast('Bitte mit Strg+C oder Cmd+C kopieren.');
+          }
+        });
+      }
+    });
+  }
 
   function importDialog() {
     OS.ui.modal({
       title: 'Daten importieren',
-      subtitle: 'Wähle eine zuvor exportierte JSON-Datei.',
+      subtitle: 'Wähle eine exportierte JSON-Datei oder füge den Text ein.',
       body: '<div class="stack" style="gap:16px">' +
-        '<input type="file" accept="application/json,.json" data-file class="input">' +
+        '<label class="field"><span class="field-label">Datei</span>' +
+          '<input type="file" accept="application/json,.json" data-file class="input"></label>' +
+        '<label class="field"><span class="field-label">Oder Text einfügen</span>' +
+          '<textarea class="textarea" rows="5" data-paste placeholder="Den Inhalt einer Exportdatei hier einfügen"></textarea></label>' +
         '<label class="field"><span class="field-label">Vorgehen</span>' +
           '<select class="select" data-mode>' +
             '<option value="ersetzen">Vorhandene Daten ersetzen</option>' +
@@ -617,22 +766,28 @@ OS.views.system = (function () {
       footer: '<button class="btn" data-modal-close type="button">Abbrechen</button>' +
         '<button class="btn btn-primary" data-go type="button">Importieren</button>',
       onMount: function (root, api) {
+        function apply(text, mode) {
+          try {
+            S.importData(text, mode);
+            api.close();
+            OS.ui.toast('Import abgeschlossen.');
+            OS.app.applySettings();
+          } catch (err) {
+            OS.ui.toast(err.message || 'Import fehlgeschlagen.');
+          }
+        }
+
         root.querySelector('[data-go]').addEventListener('click', () => {
-          const input = root.querySelector('[data-file]');
           const mode = root.querySelector('[data-mode]').value;
+          const pasted = root.querySelector('[data-paste]').value.trim();
+          if (pasted) { apply(pasted, mode); return; }
+
+          const input = root.querySelector('[data-file]');
           const file = input.files && input.files[0];
-          if (!file) { OS.ui.toast('Bitte eine Datei wählen.'); return; }
+          if (!file) { OS.ui.toast('Bitte eine Datei wählen oder Text einfügen.'); return; }
           const reader = new FileReader();
-          reader.onload = function () {
-            try {
-              S.importData(String(reader.result), mode);
-              api.close();
-              OS.ui.toast('Import abgeschlossen.');
-              OS.app.applySettings();
-            } catch (err) {
-              OS.ui.toast(err.message || 'Import fehlgeschlagen.');
-            }
-          };
+          reader.onload = function () { apply(String(reader.result), mode); };
+          reader.onerror = function () { OS.ui.toast('Die Datei ließ sich nicht lesen.'); };
           reader.readAsText(file);
         });
       }
@@ -732,9 +887,43 @@ OS.views.system = (function () {
       S.update(() => S.remove('template', ds.id));
     },
 
+    'system.syncSetup': function () { syncSetupDialog(); },
+    'system.syncLogin': function () {
+      const input = document.querySelector('[data-sync-mail]');
+      const mail = input ? input.value.trim() : '';
+      if (!mail || mail.indexOf('@') < 0) { OS.ui.toast('Bitte eine E-Mail-Adresse eintragen.'); return; }
+      OS.sync.signIn(mail).then(function () {
+        OS.ui.toast('Link verschickt. Öffne ihn auf diesem Gerät.');
+      }).catch(function (err) {
+        OS.ui.toast(err && err.message ? err.message : 'Der Link ließ sich nicht senden.');
+      });
+    },
+    'system.syncLogout': async function () {
+      const ok = await OS.ui.confirm({
+        title: 'Abmelden?',
+        text: 'Die Daten bleiben auf diesem Gerät. Der Abgleich pausiert, bis du dich wieder anmeldest.',
+        confirmLabel: 'Abmelden'
+      });
+      if (ok) OS.sync.signOut();
+    },
+    'system.syncNow': function () { OS.sync.syncNow(); },
+    'system.syncRestore': async function () {
+      const ok = await OS.ui.confirm({
+        title: 'Vorherigen Stand zurückholen?',
+        text: 'Der aktuelle Stand wird durch die Sicherung ersetzt und anschließend auf die anderen Geräte übertragen.',
+        confirmLabel: 'Zurückholen'
+      });
+      if (ok) OS.sync.restore();
+    },
+
     'system.export': function () {
-      S.exportFile();
-      OS.ui.toast('Export gespeichert.');
+      const json = S.exportData();
+      const name = S.exportFileName();
+      S.exportFile().then(function (result) {
+        if (result === 'saved' || result === 'local') OS.ui.toast('Export gespeichert.');
+        else if (result === 'declined') OS.ui.toast('Export abgebrochen.');
+        else exportTextDialog(json, name);
+      });
     },
     'system.import': function () { importDialog(); },
     'system.reset': async function () {
