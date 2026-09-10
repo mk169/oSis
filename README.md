@@ -96,6 +96,25 @@ Die Kopplung braucht eine Verbindung nach außen. In der Claude-Artifact-Fassung
 ist sie deshalb nicht verfügbar, dort blendet OS den Bereich aus. Export und
 Import funktionieren überall.
 
+## Auf Vercel veröffentlichen
+
+Das Repository ist ohne Build-Schritt aufgebaut, Vercel liefert es unverändert
+aus. `vercel.json` legt genau das fest und sorgt dafür, dass Änderungen sofort
+ankommen statt aus dem Zwischenspeicher.
+
+1. Auf vercel.com mit GitHub anmelden, Add New, Project, dieses Repository
+   importieren.
+2. Framework Preset auf `Other` lassen, Build Command und Install Command leer,
+   Output Directory `.` – das steht schon in `vercel.json`.
+3. Deploy. Nach etwa einer Minute steht die Adresse fest.
+4. Unter Settings, Git prüfen, dass die Production Branch `main` ist.
+5. Diese Adresse anschließend in Supabase unter Authentication, URL
+   Configuration als Site URL und als Redirect URL eintragen. Ohne diesen
+   Schritt führt der Anmeldelink ins Leere.
+
+Vorschau-Bereitstellungen bekommen eigene Adressen. Der Anmeldelink gilt nur
+für die eingetragene Produktionsadresse, richte die Kopplung also dort ein.
+
 ## Als Website veröffentlichen
 
 Über GitHub Pages: Repository → Settings → Pages → Source „Deploy from a
