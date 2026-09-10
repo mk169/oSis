@@ -73,12 +73,24 @@ ins Leere.
 **4. Zugangsdaten holen.** Unter Settings, API stehen `Project URL` und der
 Schlüssel `anon public`. Beide Werte werden gebraucht.
 
-**5. In OS eintragen.** Review & System, Daten, Geräte, Kopplung einrichten.
-Beide Werte einfügen, verbinden, dann die eigene E-Mail-Adresse eintragen und
-den zugeschickten Link auf demselben Gerät öffnen.
+**5. Werte hinterlegen.** Am bequemsten in `assets/js/config.js`:
 
-**6. Zweites Gerät.** Dieselben Schritte 5 mit denselben Werten und derselben
-E-Mail-Adresse. Ab dann folgen die Daten.
+```js
+OS.config = {
+  supabaseUrl: 'https://abcdefgh.supabase.co',
+  supabaseKey: 'eyJhbGci…'
+};
+```
+
+Damit ist jedes Gerät sofort vorbereitet, es bleibt nur die Anmeldung.
+Wer die Werte nicht im Repository haben will, lässt die Datei leer und trägt
+sie stattdessen unter Review & System, Daten, Geräte, Kopplung einrichten ein.
+Eine dort eingetragene Verbindung gilt nur für dieses Gerät und hat Vorrang.
+
+**6. Anmelden, auf jedem Gerät einmal.** Review & System, Daten, Geräte, die
+eigene E-Mail-Adresse eintragen und den zugeschickten Link im selben Browser
+öffnen. Auf dem zweiten Gerät dieselbe Adresse verwenden. Ab dann folgen die
+Daten.
 
 Der `anon public` Schlüssel darf im Gerät liegen, dafür ist er gemacht.
 Geschützt werden die Daten durch die Zugriffsregeln der Datenbank.

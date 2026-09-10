@@ -22,6 +22,7 @@ const CSS = [
 ];
 
 const JS = [
+  'assets/js/config.js',
   'assets/js/util.js',
   'assets/js/store.js',
   'assets/js/ui.js',
