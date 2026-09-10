@@ -219,6 +219,17 @@ OS.sync = (function () {
     });
   }
 
+  function signInWithPassword(email, password) {
+    if (!client) return Promise.reject(new Error('Nicht eingerichtet.'));
+    return client.auth.signInWithPassword({
+      email: String(email || '').trim(),
+      password: String(password || '')
+    }).then(function (res) {
+      if (res.error) throw res.error;
+      return true;
+    });
+  }
+
   function signOut() {
     if (!client) return Promise.resolve();
     return client.auth.signOut().then(function () {
@@ -330,6 +341,7 @@ OS.sync = (function () {
     clearConfig: clearConfig,
     config: config,
     signIn: signIn,
+    signInWithPassword: signInWithPassword,
     signOut: signOut,
     syncNow: syncNow,
     restore: restore,
