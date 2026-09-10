@@ -24,5 +24,5 @@ window.OS = window.OS || {};
 
 OS.config = {
   supabaseUrl: 'https://sqfckutbwrgbhhklckda.supabase.co',
-  supabaseKey: ''
+  supabaseKey: 'sb_publishable_2IXs727mzsYvepBahKx_DA_7ipqLJyP'
 };
