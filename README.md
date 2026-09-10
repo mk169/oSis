@@ -40,27 +40,8 @@ nicht bei OS und nicht bei Dritten.
 
 **1. Projekt anlegen.** Auf supabase.com ein kostenloses Projekt erstellen.
 
-**2. Tabelle einrichten.** Im SQL-Editor des Projekts einmal ausführen:
-
-```sql
-create table if not exists public.os_state (
-  user_id    uuid primary key references auth.users on delete cascade,
-  payload    jsonb not null,
-  device     text,
-  updated_at timestamptz not null default now()
-);
-
-alter table public.os_state enable row level security;
-
-create policy "eigene daten lesen"  on public.os_state
-  for select using (auth.uid() = user_id);
-create policy "eigene daten anlegen" on public.os_state
-  for insert with check (auth.uid() = user_id);
-create policy "eigene daten aendern" on public.os_state
-  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
-
-alter publication supabase_realtime add table public.os_state;
-```
+**2. Tabelle einrichten.** Im SQL-Editor des Projekts den Inhalt von
+`supabase/schema.sql` einmal ausführen.
 
 Die drei Regeln sorgen dafür, dass jede Person nur die eigene Zeile sieht.
 Die letzte Zeile schaltet die Live-Übertragung zwischen den Geräten frei.
@@ -186,13 +167,17 @@ assets/css/base.css          Tokens, Reset, Typografie
 assets/css/layout.css        App-Shell, Navigation, Drawer
 assets/css/components.css    Karten, Formulare, Modal, Chips
 assets/css/views.css         Ansichtsspezifisches
+assets/js/config.js          Zugangsdaten der Kopplung, ab Werk leer
 assets/js/util.js            Datum, Text, Icons
 assets/js/store.js           Datenmodell, Persistenz, Selektoren, Export/Import
 assets/js/ui.js              Modal, Formular, Toast, Drawer
 assets/js/forms.js           Dialoge für Aufgabe, Projekt, Ziel, Saison; Frameworks
+assets/js/sync.js            Kopplung mehrerer Geräte über Supabase
 assets/js/views/*.js         Die fünf Ansichten
 assets/js/app.js             Router, Ereignisse, Inbox, Suche
 build.js                     Baut dist/os.html als Einzeldatei
+supabase/schema.sql          Tabelle und Zugriffsregeln für die Kopplung
+vercel.json                  Auslieferung ohne Build-Schritt
 ```
 
 ## Datenformat
