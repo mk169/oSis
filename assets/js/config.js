@@ -23,6 +23,6 @@
 window.OS = window.OS || {};
 
 OS.config = {
-  supabaseUrl: '',
+  supabaseUrl: 'https://sqfckutbwrgbhhklckda.supabase.co',
   supabaseKey: ''
 };
