@@ -1,0 +1,55 @@
+name: Seite veröffentlichen
+
+# Veröffentlicht OS bei jeder Änderung an main. Der Schritt
+# configure-pages schaltet GitHub Pages bei Bedarf selbst ein und
+# stellt die Quelle auf diesen Ablauf um, damit keine Einstellung
+# von Hand nötig ist.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  veroeffentlichen:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Quellcode holen
+        uses: actions/checkout@v4
+
+      - name: Pages einrichten
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Seite zusammenstellen
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          cp -r assets _site/
+          cp -r dist _site/ || true
+          cp README.md _site/ || true
+          touch _site/.nojekyll
+          echo "Inhalt von _site:"
+          ls -la _site
+
+      - name: Seite hochladen
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Veröffentlichen
+        id: deployment
+        uses: actions/deploy-pages@v4
