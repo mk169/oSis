@@ -459,11 +459,125 @@ OS.views.system = (function () {
 
   /* --- Tab: Daten ------------------------------------------------------------- */
 
+  /* --- Kopplung ---------------------------------------------------------------- */
+
+  const SYNC_LABEL = {
+    aus: 'Nicht eingerichtet',
+    verbindet: 'Verbindet …',
+    anmeldung: 'Anmeldung nötig',
+    abgleich: 'Gleicht ab …',
+    gekoppelt: 'Gekoppelt',
+    fehler: 'Unterbrochen'
+  };
+
+  function syncSection() {
+    const sync = OS.sync;
+    const status = sync.status;
+    const backup = sync.backupTime();
+
+    let body = '';
+
+    // In eingebetteten Umgebungen sind Verbindungen nach außen gesperrt.
+    if (window.claude && typeof window.claude.use === 'function') {
+      return '<section class="section">' +
+        '<div class="section-head"><h2>Geräte</h2></div>' +
+        '<div class="note note-quiet">Hier ist keine Kopplung möglich, weil diese Umgebung keine Verbindungen ' +
+        'zu fremden Servern zulässt. Nutze dafür die installierte Fassung. ' +
+        'Export und Import funktionieren auch hier.</div>' +
+        '</section>';
+    }
+
+    if (status === 'aus') {
+      body = '<p class="small muted" style="margin-bottom:14px">Ohne Kopplung bleibt jedes Gerät für sich. ' +
+        'Mit Kopplung sehen iPhone und Mac denselben Stand.</p>' +
+        '<button class="btn btn-sm" data-act="system.syncSetup">Kopplung einrichten</button>';
+    } else if (status === 'anmeldung') {
+      body = '<p class="small muted" style="margin-bottom:14px">Melde dich mit deiner E-Mail-Adresse an. ' +
+        'Du bekommst einen Link zugeschickt, ein Passwort brauchst du nicht. ' +
+        'Auf dem zweiten Gerät nimmst du dieselbe Adresse.</p>' +
+        '<div class="row" style="gap:8px;flex-wrap:nowrap;max-width:420px">' +
+          '<input class="input" type="email" data-sync-mail placeholder="deine@adresse.de" style="flex:1">' +
+          '<button class="btn btn-sm" data-act="system.syncLogin">Link senden</button>' +
+        '</div>' +
+        '<div style="margin-top:12px"><button class="link-btn" data-act="system.syncSetup">Zugangsdaten ändern</button></div>';
+    } else if (status === 'gekoppelt' || status === 'abgleich') {
+      body = '<div class="stack" style="gap:10px">' +
+        '<div class="small">Angemeldet als ' + U.esc(sync.email || '—') + '</div>' +
+        (sync.lastSync ? '<div class="tiny muted">Zuletzt abgeglichen um ' +
+          U.esc(new Date(sync.lastSync).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })) + ' Uhr</div>' : '') +
+        '<div class="row" style="margin-top:6px">' +
+          '<button class="btn btn-sm" data-act="system.syncNow">Jetzt abgleichen</button>' +
+          '<button class="btn btn-sm btn-quiet" data-act="system.syncLogout">Abmelden</button>' +
+        '</div>' +
+        '</div>';
+    } else if (status === 'fehler') {
+      body = '<div class="note" style="margin-bottom:14px">' + U.esc(sync.detail || 'Der Abgleich ruht gerade.') + '</div>' +
+        '<div class="row">' +
+          '<button class="btn btn-sm" data-act="system.syncNow">Erneut versuchen</button>' +
+          '<button class="link-btn" data-act="system.syncSetup">Zugangsdaten ändern</button>' +
+        '</div>';
+    } else {
+      body = '<p class="small muted">Einen Moment.</p>';
+    }
+
+    return '<section class="section">' +
+      '<div class="section-head"><h2>Geräte</h2>' +
+        '<span class="chip' + (status === 'gekoppelt' ? ' chip-green' : status === 'fehler' ? ' chip-warn' : '') + '">' +
+        U.esc(SYNC_LABEL[status] || status) + '</span></div>' +
+      '<div class="card">' + body +
+        (backup ? '<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">' +
+          '<div class="tiny muted" style="margin-bottom:8px">Sicherung vom ' +
+            U.esc(U.fmtMedium(String(backup).slice(0, 10))) + ', angelegt vor dem letzten Übernehmen.</div>' +
+          '<button class="btn btn-sm btn-quiet" data-act="system.syncRestore">Vorherigen Stand zurückholen</button>' +
+        '</div>' : '') +
+      '</div>' +
+      '</section>';
+  }
+
+  function syncSetupDialog() {
+    const cfg = OS.sync.config() || { url: '', key: '' };
+    OS.ui.form({
+      title: 'Kopplung einrichten',
+      subtitle: 'Einmal pro Gerät. Die beiden Werte findest du in deinem Supabase-Projekt unter Settings, API.',
+      submitLabel: 'Verbinden',
+      size: 'lg',
+      extraFooter: cfg.url ? '<button class="btn btn-quiet btn-sm" data-clear type="button">Verbindung lösen</button>' : '',
+      fields: [
+        {
+          type: 'note', tone: 'note-quiet',
+          text: 'Der Projektschlüssel ist der öffentliche „anon public“. Er darf im Gerät liegen; ' +
+            'geschützt werden die Daten durch die Zugriffsregeln der Datenbank.'
+        },
+        { name: 'url', label: 'Projekt-URL', value: cfg.url, placeholder: 'https://xxxxx.supabase.co', autofocus: true },
+        { name: 'key', type: 'textarea', rows: 3, label: 'anon public key', value: cfg.key, placeholder: 'eyJhbGci…' }
+      ],
+      onMount: function (root, api) {
+        const clear = root.querySelector('[data-clear]');
+        if (clear) clear.addEventListener('click', function () {
+          OS.sync.clearConfig();
+          api.close();
+          OS.app.render();
+          OS.ui.toast('Verbindung gelöst. Deine Daten bleiben auf diesem Gerät.');
+        });
+      },
+      onSubmit: function (v) {
+        if (!OS.sync.setConfig(v.url, v.key)) {
+          OS.ui.toast('Bitte beide Werte eintragen.');
+          return false;
+        }
+        OS.sync.start();
+        OS.ui.toast('Verbindung gespeichert.');
+      }
+    });
+  }
+
   function dataTab() {
     const st = S.stats();
     const settings = S.state.settings;
 
-    return '<section class="section">' +
+    return syncSection() +
+
+      '<section class="section">' +
         '<div class="section-head"><h2>Daten</h2></div>' +
         '<p class="small muted" style="margin-bottom:20px">Alles bleibt in diesem Browser. Kein Konto, kein Server. ' +
         'Ein Export ist deine Sicherung – und dein Umzugskarton.</p>' +
@@ -771,6 +885,35 @@ OS.views.system = (function () {
     },
     'system.templateDelete': function (el, ds) {
       S.update(() => S.remove('template', ds.id));
+    },
+
+    'system.syncSetup': function () { syncSetupDialog(); },
+    'system.syncLogin': function () {
+      const input = document.querySelector('[data-sync-mail]');
+      const mail = input ? input.value.trim() : '';
+      if (!mail || mail.indexOf('@') < 0) { OS.ui.toast('Bitte eine E-Mail-Adresse eintragen.'); return; }
+      OS.sync.signIn(mail).then(function () {
+        OS.ui.toast('Link verschickt. Öffne ihn auf diesem Gerät.');
+      }).catch(function (err) {
+        OS.ui.toast(err && err.message ? err.message : 'Der Link ließ sich nicht senden.');
+      });
+    },
+    'system.syncLogout': async function () {
+      const ok = await OS.ui.confirm({
+        title: 'Abmelden?',
+        text: 'Die Daten bleiben auf diesem Gerät. Der Abgleich pausiert, bis du dich wieder anmeldest.',
+        confirmLabel: 'Abmelden'
+      });
+      if (ok) OS.sync.signOut();
+    },
+    'system.syncNow': function () { OS.sync.syncNow(); },
+    'system.syncRestore': async function () {
+      const ok = await OS.ui.confirm({
+        title: 'Vorherigen Stand zurückholen?',
+        text: 'Der aktuelle Stand wird durch die Sicherung ersetzt und anschließend auf die anderen Geräte übertragen.',
+        confirmLabel: 'Zurückholen'
+      });
+      if (ok) OS.sync.restore();
     },
 
     'system.export': function () {

@@ -32,6 +32,70 @@ Steht eine Speicherfunktion der Umgebung zur Verfügung, nutzt der Export sie.
 Ist keine vorhanden, zeigt OS den Export als Text zum Kopieren. Der Import
 nimmt wahlweise eine Datei oder eingefügten Text.
 
+## Geräte koppeln
+
+Ohne Kopplung bleibt jedes Gerät für sich. Mit Kopplung sehen iPhone und Mac
+denselben Stand. Die Daten liegen dann in einem eigenen Supabase-Projekt,
+nicht bei OS und nicht bei Dritten.
+
+**1. Projekt anlegen.** Auf supabase.com ein kostenloses Projekt erstellen.
+
+**2. Tabelle einrichten.** Im SQL-Editor des Projekts einmal ausführen:
+
+```sql
+create table if not exists public.os_state (
+  user_id    uuid primary key references auth.users on delete cascade,
+  payload    jsonb not null,
+  device     text,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.os_state enable row level security;
+
+create policy "eigene daten lesen"  on public.os_state
+  for select using (auth.uid() = user_id);
+create policy "eigene daten anlegen" on public.os_state
+  for insert with check (auth.uid() = user_id);
+create policy "eigene daten aendern" on public.os_state
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+alter publication supabase_realtime add table public.os_state;
+```
+
+Die drei Regeln sorgen dafür, dass jede Person nur die eigene Zeile sieht.
+Die letzte Zeile schaltet die Live-Übertragung zwischen den Geräten frei.
+
+**3. Adresse freigeben.** Unter Authentication, URL Configuration die Adresse
+der App als Site URL und als Redirect URL eintragen, etwa
+`https://mk169.github.io/oSis/`. Ohne diesen Schritt führt der Anmeldelink
+ins Leere.
+
+**4. Zugangsdaten holen.** Unter Settings, API stehen `Project URL` und der
+Schlüssel `anon public`. Beide Werte werden gebraucht.
+
+**5. In OS eintragen.** Review & System, Daten, Geräte, Kopplung einrichten.
+Beide Werte einfügen, verbinden, dann die eigene E-Mail-Adresse eintragen und
+den zugeschickten Link auf demselben Gerät öffnen.
+
+**6. Zweites Gerät.** Dieselben Schritte 5 mit denselben Werten und derselben
+E-Mail-Adresse. Ab dann folgen die Daten.
+
+Der `anon public` Schlüssel darf im Gerät liegen, dafür ist er gemacht.
+Geschützt werden die Daten durch die Zugriffsregeln der Datenbank.
+
+### Was bei gleichzeitiger Änderung passiert
+
+Der zuletzt gespeicherte Stand gewinnt. Bevor OS einen fremden Stand
+übernimmt, legt es den eigenen als Sicherung ab. Unter Geräte lässt er sich
+mit einem Klick zurückholen. Der Export bleibt unabhängig davon die
+verlässlichste Sicherung.
+
+### Grenzen
+
+Die Kopplung braucht eine Verbindung nach außen. In der Claude-Artifact-Fassung
+ist sie deshalb nicht verfügbar, dort blendet OS den Bereich aus. Export und
+Import funktionieren überall.
+
 ## Als Website veröffentlichen
 
 Über GitHub Pages: Repository → Settings → Pages → Source „Deploy from a

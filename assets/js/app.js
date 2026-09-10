@@ -614,6 +614,9 @@ OS.app = (function () {
     bindEvents();
     S.subscribe(() => { render(); });
     render();
+
+    // Kopplung, sofern eingerichtet. Ohne Zugangsdaten passiert nichts.
+    if (OS.sync) OS.sync.start();
   }
 
   return {

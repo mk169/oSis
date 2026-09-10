@@ -26,6 +26,7 @@ const JS = [
   'assets/js/store.js',
   'assets/js/ui.js',
   'assets/js/forms.js',
+  'assets/js/sync.js',
   'assets/js/views/today.js',
   'assets/js/views/week.js',
   'assets/js/views/season.js',
