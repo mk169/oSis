@@ -68,10 +68,16 @@ Wer die Werte nicht im Repository haben will, lässt die Datei leer und trägt
 sie stattdessen unter Review & System, Daten, Geräte, Kopplung einrichten ein.
 Eine dort eingetragene Verbindung gilt nur für dieses Gerät und hat Vorrang.
 
-**6. Anmelden, auf jedem Gerät einmal.** Review & System, Daten, Geräte, die
-eigene E-Mail-Adresse eintragen und den zugeschickten Link im selben Browser
-öffnen. Auf dem zweiten Gerät dieselbe Adresse verwenden. Ab dann folgen die
-Daten.
+**6. Konto anlegen.** In Supabase unter Authentication, Users, Add user eine
+E-Mail-Adresse und ein Passwort vergeben und das Häkchen bei Auto Confirm User
+setzen. Das ist zuverlässiger als der Link per E-Mail: Supabase verschickt ab
+Werk über einen geteilten Absender, der stark gedrosselt ist und bei manchen
+Anbietern gar nicht ankommt.
+
+**7. Anmelden, auf jedem Gerät einmal.** Review & System, Daten, Geräte, die
+E-Mail-Adresse und Passwort eintragen und auf Anmelden klicken. Auf dem zweiten
+Gerät dieselben Angaben verwenden. Ab dann folgen die Daten. Wer lieber einen
+Link per E-Mail bekommt, findet die Möglichkeit darunter.
 
 Der `anon public` Schlüssel darf im Gerät liegen, dafür ist er gemacht.
 Geschützt werden die Daten durch die Zugriffsregeln der Datenbank.

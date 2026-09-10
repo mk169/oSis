@@ -3756,6 +3756,17 @@ OS.sync = (function () {
     });
   }
 
+  function signInWithPassword(email, password) {
+    if (!client) return Promise.reject(new Error('Nicht eingerichtet.'));
+    return client.auth.signInWithPassword({
+      email: String(email || '').trim(),
+      password: String(password || '')
+    }).then(function (res) {
+      if (res.error) throw res.error;
+      return true;
+    });
+  }
+
   function signOut() {
     if (!client) return Promise.resolve();
     return client.auth.signOut().then(function () {
@@ -3867,6 +3878,7 @@ OS.sync = (function () {
     clearConfig: clearConfig,
     config: config,
     signIn: signIn,
+    signInWithPassword: signInWithPassword,
     signOut: signOut,
     syncNow: syncNow,
     restore: restore,
@@ -5798,14 +5810,19 @@ OS.views.system = (function () {
         'Mit Kopplung sehen iPhone und Mac denselben Stand.</p>' +
         '<button class="btn btn-sm" data-act="system.syncSetup">Kopplung einrichten</button>';
     } else if (status === 'anmeldung') {
-      body = '<p class="small muted" style="margin-bottom:14px">Melde dich mit deiner E-Mail-Adresse an. ' +
-        'Du bekommst einen Link zugeschickt, ein Passwort brauchst du nicht. ' +
-        'Auf dem zweiten Gerät nimmst du dieselbe Adresse.</p>' +
-        '<div class="row" style="gap:8px;flex-wrap:nowrap;max-width:420px">' +
-          '<input class="input" type="email" data-sync-mail placeholder="deine@adresse.de" style="flex:1">' +
-          '<button class="btn btn-sm" data-act="system.syncLogin">Link senden</button>' +
+      body = '<p class="small muted" style="margin-bottom:14px">Melde dich an. ' +
+        'Auf dem zweiten Gerät nimmst du dieselben Angaben, dann laufen beide zusammen.</p>' +
+        '<div class="stack" style="gap:8px;max-width:420px">' +
+          '<input class="input" type="email" data-sync-mail placeholder="deine@adresse.de" autocomplete="username">' +
+          '<input class="input" type="password" data-sync-pass placeholder="Passwort" autocomplete="current-password">' +
+          '<button class="btn btn-sm btn-primary" data-act="system.syncPassword" style="align-self:flex-start">Anmelden</button>' +
         '</div>' +
-        '<div style="margin-top:12px"><button class="link-btn" data-act="system.syncSetup">Zugangsdaten ändern</button></div>';
+        '<div class="field-help" style="margin-top:12px">Das Konto legst du einmal in deinem Supabase-Projekt an, ' +
+        'unter Authentication, Users, Add user. Dort das Häkchen bei Auto Confirm User setzen.</div>' +
+        '<div class="row" style="margin-top:12px;gap:16px">' +
+          '<button class="link-btn" data-act="system.syncLogin">Stattdessen Link per E-Mail</button>' +
+          '<button class="link-btn" data-act="system.syncSetup">Zugangsdaten ändern</button>' +
+        '</div>';
     } else if (status === 'gekoppelt' || status === 'abgleich') {
       body = '<div class="stack" style="gap:10px">' +
         '<div class="small">Angemeldet als ' + U.esc(sync.email || '—') + '</div>' +
@@ -6194,6 +6211,24 @@ OS.views.system = (function () {
     },
 
     'system.syncSetup': function () { syncSetupDialog(); },
+    'system.syncPassword': function () {
+      const mail = (document.querySelector('[data-sync-mail]') || {}).value || '';
+      const pass = (document.querySelector('[data-sync-pass]') || {}).value || '';
+      if (!mail.trim() || mail.indexOf('@') < 0) { OS.ui.toast('Bitte eine E-Mail-Adresse eintragen.'); return; }
+      if (!pass) { OS.ui.toast('Bitte das Passwort eintragen.'); return; }
+      OS.sync.signInWithPassword(mail, pass).then(function () {
+        OS.ui.toast('Angemeldet.');
+      }).catch(function (err) {
+        const msg = err && err.message ? err.message : '';
+        if (/Invalid login credentials/i.test(msg)) {
+          OS.ui.toast('E-Mail oder Passwort stimmt nicht. Konto in Supabase unter Authentication, Users anlegen.');
+        } else if (/Email not confirmed/i.test(msg)) {
+          OS.ui.toast('Das Konto ist noch nicht bestätigt. In Supabase beim Anlegen Auto Confirm User setzen.');
+        } else {
+          OS.ui.toast(msg || 'Die Anmeldung hat nicht geklappt.');
+        }
+      });
+    },
     'system.syncLogin': function () {
       const input = document.querySelector('[data-sync-mail]');
       const mail = input ? input.value.trim() : '';
