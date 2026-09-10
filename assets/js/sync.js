@@ -14,7 +14,7 @@ OS.sync = (function () {
   const U = OS.util;
   const S = OS.store;
 
-  const SDK_URL = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js';
+  const SDK_URL = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
   const CONFIG_KEY = 'os.sync.config';
   const BACKUP_KEY = 'os.sync.backup';
   const DEVICE_KEY = 'os.sync.device';
