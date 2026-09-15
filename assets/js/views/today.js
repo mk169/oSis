@@ -176,6 +176,23 @@ OS.views.heute = (function () {
       '</section>';
   }
 
+  function gratitudeSection(key) {
+    const day = S.getDay(key);
+    return '<section class="section">' +
+      '<div class="section-head"><h3>Dankbarkeit</h3></div>' +
+      '<p class="small muted" style="margin-bottom:12px">Drei Zeilen. Kleines zählt genauso wie Großes.</p>' +
+      '<div class="stack" style="gap:0">' +
+        day.gratitude.map((value, i) =>
+          '<div class="gratitude-row">' +
+            '<span class="gratitude-mark">—</span>' +
+            '<input class="line-input" placeholder="' +
+              (i === 0 ? 'Wofür bist du heute dankbar?' : 'Und wofür noch?') + '" ' +
+              'value="' + U.esc(value) + '" data-store="day:' + key + ':gratitude.' + i + '">' +
+          '</div>').join('') +
+      '</div>' +
+      '</section>';
+  }
+
   function closeSection(key) {
     const day = S.getDay(key);
     const done = S.tasks({ date: key, status: 'done' });
@@ -212,7 +229,7 @@ OS.views.heute = (function () {
       oneThing(key) +
       '<div class="today-grid">' +
         '<div>' + taskSection(key) + blockSection(key) + '</div>' +
-        '<div>' + habitSection(key) + checkinSection(key) + inboxSection() + '</div>' +
+        '<div>' + habitSection(key) + checkinSection(key) + gratitudeSection(key) + inboxSection() + '</div>' +
       '</div>' +
       closeSection(key);
   }
