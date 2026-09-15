@@ -99,6 +99,8 @@
 .gratitude-row:last-child { border-bottom: 0; }
 .gratitude-mark { color: var(--green); flex: 0 0 auto; font-size: 13px; }
 .gratitude-row .line-input { flex: 1; }
+.gratitude-row .li-actions { opacity: 0; transition: opacity var(--speed); }
+.gratitude-row:hover .li-actions, .gratitude-row:focus-within .li-actions { opacity: 1; }
 
 /* Inbox-Vorschau */
 .inbox-preview .list-item { padding: 9px 0; }

@@ -179,8 +179,9 @@ OS.views.heute = (function () {
   function gratitudeSection(key) {
     const day = S.getDay(key);
     return '<section class="section">' +
-      '<div class="section-head"><h3>Dankbarkeit</h3></div>' +
-      '<p class="small muted" style="margin-bottom:12px">Drei Zeilen. Kleines zählt genauso wie Großes.</p>' +
+      '<div class="section-head"><h3>Dankbarkeit</h3>' +
+        '<button class="link-btn" data-act="heute.gratitudeAdd" data-date="' + key + '">Zeile</button></div>' +
+      '<p class="small muted" style="margin-bottom:12px">Drei Zeilen zum Anfangen. Mehr, wenn dir mehr einfällt.</p>' +
       '<div class="stack" style="gap:0">' +
         day.gratitude.map((value, i) =>
           '<div class="gratitude-row">' +
@@ -188,6 +189,11 @@ OS.views.heute = (function () {
             '<input class="line-input" placeholder="' +
               (i === 0 ? 'Wofür bist du heute dankbar?' : 'Und wofür noch?') + '" ' +
               'value="' + U.esc(value) + '" data-store="day:' + key + ':gratitude.' + i + '">' +
+            (day.gratitude.length > 3
+              ? '<span class="li-actions">' +
+                OS.ui.iconBtn('trash', 'heute.gratitudeRemove', 'Zeile entfernen',
+                  'data-date="' + key + '" data-index="' + i + '"') + '</span>'
+              : '') +
           '</div>').join('') +
       '</div>' +
       '</section>';
@@ -347,6 +353,24 @@ OS.views.heute = (function () {
         S.remove('inbox', ds.id);
       });
       OS.ui.toast('Für heute übernommen.');
+    },
+    'heute.gratitudeAdd': function (el, ds) {
+      S.update(() => {
+        const d = S.ensureDay(ds.date);
+        d.gratitude.push('');
+      });
+      setTimeout(function () {
+        const felder = document.querySelectorAll('[data-store*=":gratitude."]');
+        const letztes = felder[felder.length - 1];
+        if (letztes) letztes.focus();
+      }, 40);
+    },
+    'heute.gratitudeRemove': function (el, ds) {
+      S.update(() => {
+        const d = S.ensureDay(ds.date);
+        if (d.gratitude.length <= 3) return;
+        d.gratitude.splice(Number(ds.index), 1);
+      });
     },
     'heute.carryOver': function (el, ds) {
       const next = U.addDays(ds.date, 1);
