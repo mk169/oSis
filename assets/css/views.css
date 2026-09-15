@@ -94,6 +94,12 @@
 
 .mood-row { display: flex; gap: 6px; flex-wrap: wrap; }
 
+/* Dankbarkeit */
+.gratitude-row { display: flex; align-items: center; gap: 11px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.gratitude-row:last-child { border-bottom: 0; }
+.gratitude-mark { color: var(--green); flex: 0 0 auto; font-size: 13px; }
+.gratitude-row .line-input { flex: 1; }
+
 /* Inbox-Vorschau */
 .inbox-preview .list-item { padding: 9px 0; }
 

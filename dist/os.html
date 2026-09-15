@@ -990,6 +990,12 @@ button { cursor: pointer; background: none; border: none; padding: 0; }
 
 .mood-row { display: flex; gap: 6px; flex-wrap: wrap; }
 
+/* Dankbarkeit */
+.gratitude-row { display: flex; align-items: center; gap: 11px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.gratitude-row:last-child { border-bottom: 0; }
+.gratitude-mark { color: var(--green); flex: 0 0 auto; font-size: 13px; }
+.gratitude-row .line-input { flex: 1; }
+
 /* Inbox-Vorschau */
 .inbox-preview .list-item { padding: 9px 0; }
 
@@ -1809,6 +1815,7 @@ OS.store = (function () {
       intention: '',
       oneThing: '',
       checkin: { energy: null, mood: '', note: '' },
+      gratitude: ['', '', ''],
       close: { done: '', takeaway: '', closedAt: null },
       blocks: []
     };
@@ -1825,6 +1832,7 @@ OS.store = (function () {
     return Object.assign(dayDefaults(), d, {
       checkin: Object.assign(dayDefaults().checkin, d.checkin),
       close: Object.assign(dayDefaults().close, d.close),
+      gratitude: Array.isArray(d.gratitude) ? d.gratitude.concat(['', '', '']).slice(0, 3) : ['', '', ''],
       blocks: Array.isArray(d.blocks) ? d.blocks : [],
       _key: key
     });
@@ -1836,6 +1844,8 @@ OS.store = (function () {
     const d = state.days[key];
     if (!d.checkin) d.checkin = dayDefaults().checkin;
     if (!d.close) d.close = dayDefaults().close;
+    if (!Array.isArray(d.gratitude)) d.gratitude = ['', '', ''];
+    while (d.gratitude.length < 3) d.gratitude.push('');
     if (!Array.isArray(d.blocks)) d.blocks = [];
     return d;
   }
@@ -4069,6 +4079,23 @@ OS.views.heute = (function () {
       '</section>';
   }
 
+  function gratitudeSection(key) {
+    const day = S.getDay(key);
+    return '<section class="section">' +
+      '<div class="section-head"><h3>Dankbarkeit</h3></div>' +
+      '<p class="small muted" style="margin-bottom:12px">Drei Zeilen. Kleines zählt genauso wie Großes.</p>' +
+      '<div class="stack" style="gap:0">' +
+        day.gratitude.map((value, i) =>
+          '<div class="gratitude-row">' +
+            '<span class="gratitude-mark">—</span>' +
+            '<input class="line-input" placeholder="' +
+              (i === 0 ? 'Wofür bist du heute dankbar?' : 'Und wofür noch?') + '" ' +
+              'value="' + U.esc(value) + '" data-store="day:' + key + ':gratitude.' + i + '">' +
+          '</div>').join('') +
+      '</div>' +
+      '</section>';
+  }
+
   function closeSection(key) {
     const day = S.getDay(key);
     const done = S.tasks({ date: key, status: 'done' });
@@ -4105,7 +4132,7 @@ OS.views.heute = (function () {
       oneThing(key) +
       '<div class="today-grid">' +
         '<div>' + taskSection(key) + blockSection(key) + '</div>' +
-        '<div>' + habitSection(key) + checkinSection(key) + inboxSection() + '</div>' +
+        '<div>' + habitSection(key) + checkinSection(key) + gratitudeSection(key) + inboxSection() + '</div>' +
       '</div>' +
       closeSection(key);
   }

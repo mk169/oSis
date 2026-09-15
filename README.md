@@ -124,7 +124,7 @@ branch“ → Branch `main` und Ordner `/ (root)`. Danach liegt die App unter
 
 | Bereich | Zweck |
 | --- | --- |
-| Heute | Nur was jetzt zählt: eine Sache, höchstens drei Aufgaben, Zeitblöcke, Check-in, Abschluss |
+| Heute | Nur was jetzt zählt: eine Sache, höchstens drei Aufgaben, Zeitblöcke, Check-in, Dankbarkeit, Abschluss |
 | Woche | Wochenfokus, Kalender Mo–So, Kapazität, Gewohnheitsmatrix, „Diese Woche nicht“ |
 | Saison | 6 bis 12 Wochen, drei bis fünf Ziele, verknüpfte Projekte, Mid-Season-Review |
 | Projekte & Ziele | Aktive Projekte, Ideen & Backlog, Ziele, 25/5-Methode, Frameworks |

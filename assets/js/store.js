@@ -161,6 +161,7 @@ OS.store = (function () {
       intention: '',
       oneThing: '',
       checkin: { energy: null, mood: '', note: '' },
+      gratitude: ['', '', ''],
       close: { done: '', takeaway: '', closedAt: null },
       blocks: []
     };
@@ -177,6 +178,7 @@ OS.store = (function () {
     return Object.assign(dayDefaults(), d, {
       checkin: Object.assign(dayDefaults().checkin, d.checkin),
       close: Object.assign(dayDefaults().close, d.close),
+      gratitude: Array.isArray(d.gratitude) ? d.gratitude.concat(['', '', '']).slice(0, 3) : ['', '', ''],
       blocks: Array.isArray(d.blocks) ? d.blocks : [],
       _key: key
     });
@@ -188,6 +190,8 @@ OS.store = (function () {
     const d = state.days[key];
     if (!d.checkin) d.checkin = dayDefaults().checkin;
     if (!d.close) d.close = dayDefaults().close;
+    if (!Array.isArray(d.gratitude)) d.gratitude = ['', '', ''];
+    while (d.gratitude.length < 3) d.gratitude.push('');
     if (!Array.isArray(d.blocks)) d.blocks = [];
     return d;
   }
